@@ -1,0 +1,33 @@
+{% extends './layout.html' %}
+  {% block content %}
+
+      <div class="col-sm-6">
+
+          <form action="/name/tweet" method="POST">
+            <div class="form-group">
+            <input class="form-control" type="text" placeholder="enter user"></input>
+            <br />
+            <input class="form-control" type="text" placeholder="enter tweet"></input>
+            <br />
+            <button class="btn btn-primary" type="submit">Save</button>
+            </div>
+          </form>
+
+      </div>
+
+      <div class="col-sm-6">
+        <ul class="list-group">
+          <li class="list-group-item">
+            { % for tweet in tweets % }
+            { tweet.content }
+          </li>
+        </ul>
+      </div>
+
+  {% endblock %}
+
+
+
+
+
+
