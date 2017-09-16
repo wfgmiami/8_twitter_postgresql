@@ -12,7 +12,7 @@ let _client;
 
 const connect = (cb) => {
   if(_client){
-    cb(null, _client)
+    return cb(null, _client)
   }
   const client = new pg.Client(process.env.DATABASE_URL);
   client.connect( (err, client) => {
@@ -25,6 +25,7 @@ const connect = (cb) => {
 }
 
 const findOrCreateUserByName = (name, cb) => {
+
   connect( (err, client) => {
     if(err) return cb(err);
     let qry = 'select id from users where name = $1';
@@ -32,13 +33,33 @@ const findOrCreateUserByName = (name, cb) => {
       if(result.rows.length > 1){
         return cb(null, result.rows[0].id);
       }
-      qry = 'insert into users(name) value($1) returning id';
+      qry = 'insert into users(name) values ($1) returning id';
+
       client.query(qry,[name],(err, result) => {
         if(err) return cb(err);
         cb(null, result.rows[0].id)
       })
     })
   })
+}
+
+const createTweet = (user, content, cb) => {
+
+
+  findOrCreateUserByName(user, (err, userId) => {
+    if(err) return cb(err);
+
+    connect((err, client) => {
+      if(err) return cb(err);
+      let query = "insert into tweets(user_id, content) values($1, $2)";
+      client.query(query, [userId, content], (err) => {
+        cb(err);
+      })
+
+    })
+
+  })
+
 }
 
 const getTweetsByUser = (user, cb) => {
@@ -52,15 +73,16 @@ const getTweetsByUser = (user, cb) => {
     })
   })
 }
-
+var cnt = 0;
 const getAllTweets = (cb) => {
   connect( (err, client) => {
     if(err) return cb(err);
-    let qry = `SELECT content FROM tweets`
+    let qry = `SELECT content, name FROM tweets inner join users
+    on users.id = tweets.user_id`
+
     client.query(qry, (err, tweets) => {
       if(err) return cb(err);
-      console.log(tweets.rows)
-      cb(null, tweets.rows);
+      return cb(null, tweets.rows);
     })
 
   })
@@ -106,5 +128,6 @@ module.exports = {
   sync,
   findOrCreateUserByName,
   getTweetsByUser,
-  getAllTweets
+  getAllTweets,
+  createTweet
 }
